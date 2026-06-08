@@ -27,3 +27,18 @@ expectType<TestType1>(test1);
 expectType<RequireAtLeastOne<TestType2>>(test2);
 expectType<TestType3>(test3);
 expectNever(test4);
+
+// Test for issue #821 — NonEmptyObject should reject {} for dynamic/index-signature types
+
+type IndexSigType = {[key: string]: string | number | undefined};
+
+interface CommonArguments {
+	[filter: string]: NonEmptyObject<IndexSigType>;
+}
+
+// Empty object must be rejected — at least 1 key required
+const bad: CommonArguments = {foo: {}};
+
+// Valid — foo has at least 1 key
+const good: CommonArguments = {foo: {bar: 'hello'}};
+expectType<CommonArguments>(good);

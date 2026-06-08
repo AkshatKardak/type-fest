@@ -1,6 +1,16 @@
 import type {HasRequiredKeys} from './has-required-keys.d.ts';
 import type {RequireAtLeastOne} from './require-at-least-one.d.ts';
 
+type HasOnlyIndexSignature<T extends object> =
+	string extends keyof T
+		? number extends keyof T
+			? true // Both string and number index signatures
+			: [keyof T] extends [string | number | symbol]
+				? true // Only index signature keys
+				: false
+		: string extends keyof T
+			? true
+			: false;
 /**
 Represents an object with at least 1 non-optional key.
 
@@ -33,6 +43,14 @@ const update2: UpdateRequest<User> = {};
 
 @category Object
 */
-export type NonEmptyObject<T extends object> = HasRequiredKeys<T> extends true ? T : RequireAtLeastOne<T, keyof T>;
+export type NonEmptyObject<T extends object> =
+	HasRequiredKeys<T> extends true
+		? HasOnlyIndexSignature<T> extends true
+			// Has only an index signature (e.g. {[k: string]: V}), 
+			// so require at least one key explicitly
+			? RequireAtLeastOne<T, keyof T>
+			// Has real named required keys → T is already non-empty
+			: T
+		: RequireAtLeastOne<T, keyof T>;
 
 export {};
